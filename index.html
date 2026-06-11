@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معتمر بوت - ويدجت الشات</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', 'Tahoma', sans-serif;
+        }
+
+        /* زر فتح الشات */
+        .chat-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #1e6f3f, #0e4f2a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: 0.3s;
+            z-index: 1000;
+            border: none;
+        }
+        .chat-button:hover {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, #0e5a35, #0a3d1f);
+        }
+        .chat-button img {
+            width: 32px;
+            height: 32px;
+            filter: brightness(0) invert(1);
+        }
+
+        /* نافذة الشات */
+        .chat-window {
+            position: fixed;
+            bottom: 90px;
+            left: 20px;
+            width: 380px;
+            height: 550px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1001;
+            direction: rtl;
+            font-family: 'Cairo', 'Tahoma', sans-serif;
+        }
+        .chat-window.open {
+            display: flex;
+        }
+
+        /* رأس الشات */
+        .chat-header {
+            background: linear-gradient(135deg, #1e6f3f, #0e4f2a);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f9a825;
+        }
+        .chat-header h3 {
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chat-header h3 span {
+            background: #f9a825;
+            color: #1e6f3f;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* منطقة الرسائل */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .message.user {
+            background: #1e6f3f;
+            color: white;
+            align-self: flex-end;
+            border-bottom-left-radius: 5px;
+        }
+        .message.bot {
+            background: white;
+            color: #1a1a1a;
+            align-self: flex-start;
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .typing {
+            background: white;
+            color: #666;
+            align-self: flex-start;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 13px;
+        }
+
+        /* منطقة الإدخال */
+        .chat-input-area {
+            display: flex;
+            padding: 12px;
+            background: white;
+            border-top: 1px solid #ddd;
+            gap: 8px;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+            font-family: 'Cairo', 'Tahoma', sans-serif;
+        }
+        .chat-input-area input:focus {
+            border-color: #1e6f3f;
+        }
+        .chat-input-area button {
+            background: #1e6f3f;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .chat-input-area button:hover {
+            background: #0e4f2a;
+        }
+
+        @media (max-width: 500px) {
+            .chat-window {
+                width: 320px;
+                height: 500px;
+                left: 10px;
+                bottom: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- زر الشات -->
+<button class="chat-button" id="chatButton">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="white">
+        <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+    </svg>
+</button>
+
+<!-- نافذة الشات -->
+<div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+        <h3>
+            <span>🕋</span>
+            معتمر بوت
+        </h3>
+        <button class="close-chat" id="closeChat">✕</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="message bot">السلام عليكم يا فندم 👋 أنا معتمر بوت، أي خدمة تخص العمرة والفنادق والتأشيرات والطيران، أنا موجود 😊</div>
+    </div>
+    <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="اكتب سؤالك هنا...">
+        <button id="sendBtn">➤</button>
+    </div>
+</div>
+
+<script>
+    const API_URL = "/api/chat";
+    let messageHistory = [];
+
+    const chatWindow = document.getElementById("chatWindow");
+    const chatButton = document.getElementById("chatButton");
+    const closeChat = document.getElementById("closeChat");
+    const chatMessages = document.getElementById("chatMessages");
+    const chatInput = document.getElementById("chatInput");
+    const sendBtn = document.getElementById("sendBtn");
+
+    chatButton.onclick = () => {
+        chatWindow.classList.add("open");
+    };
+    closeChat.onclick = () => {
+        chatWindow.classList.remove("open");
+    };
+
+    function addMessage(text, isUser) {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `message ${isUser ? "user" : "bot"}`;
+        msgDiv.innerText = text;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return msgDiv;
+    }
+
+    function showTyping() {
+        const typingDiv = document.createElement("div");
+        typingDiv.className = "typing";
+        typingDiv.innerText = "✍️ يكتب...";
+        typingDiv.id = "typingIndicator";
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function removeTyping() {
+        const typing = document.getElementById("typingIndicator");
+        if (typing) typing.remove();
+    }
+
+    async function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        addMessage(message, true);
+        messageHistory.push({ role: "user", content: message });
+        chatInput.value = "";
+
+        showTyping();
+
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    message: message,
+                    history: messageHistory.slice(-6)
+                })
+            });
+            const data = await res.json();
+            removeTyping();
+            const reply = data.reply || "عذراً، حصل خطأ. حاول تاني.";
+            addMessage(reply, false);
+            messageHistory.push({ role: "assistant", content: reply });
+        } catch (err) {
+            removeTyping();
+            addMessage("عذراً، في مشكلة في الاتصال. حاول تاني", false);
+        }
+    }
+
+    sendBtn.onclick = sendMessage;
+    chatInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendMessage();
+    });
+</script>
+</body>
+</html>
